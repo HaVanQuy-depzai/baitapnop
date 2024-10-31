@@ -1,0 +1,26 @@
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report, accuracy_score
+import numpy as np
+
+# Tải và chia bộ dữ liệu IRIS
+data = load_iris()
+X, y = data.data, data.target
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Huấn luyện và đánh giá mô hình CART (Gini Index)
+cart_model = DecisionTreeClassifier(criterion="gini")
+cart_model.fit(X_train, y_train)
+y_pred_cart = cart_model.predict(X_test)
+print("CART (Gini Index) - IRIS Dataset")
+print("Accuracy:", accuracy_score(y_test, y_pred_cart))
+print(classification_report(y_test, y_pred_cart))
+
+# Huấn luyện và đánh giá mô hình ID3 (Information Gain)
+id3_model = DecisionTreeClassifier(criterion="entropy")  # Thay đổi 'entropy' cho Information Gain
+id3_model.fit(X_train, y_train)
+y_pred_id3 = id3_model.predict(X_test)
+print("ID3 (Information Gain) - IRIS Dataset")
+print("Accuracy:", accuracy_score(y_test, y_pred_id3))
+print(classification_report(y_test, y_pred_id3))
