@@ -1,0 +1,65 @@
+import os
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score
+import time
+
+# Hàm xử lý hình ảnh
+def load_images_from_folder(folder):
+    images = []
+    labels = []
+        for label, subfolder in enumerate(os.listdir(folder)):
+            path = os.path.join(folder, subfolder)
+        if os.path.isdir(path):  # Kiểm tra xem path có phải là thư mục không
+            for filename in os.listdir(path):
+                img_path = os.path.join(path, filename)
+                if os.path.isfile(img_path):  # Kiểm tra xem có phải là tệp ảnh không
+                    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)  # Đọc ảnh xám
+                    if img is not None:
+                        img = cv2.resize(img, (64, 64))  # Resize về kích thước cố định
+                        images.append(img)  # Giữ ảnh dưới dạng 2D để hiển thị
+                        labels.append(label)
+    return np.array(images), np.array(labels)
+
+# Load dữ liệu hình ảnh
+X, y = load_images_from_folder("anh")  # Đặt đường dẫn đến dataset của bạn
+
+# Chia dữ liệu huấn luyện và kiểm tra
+X_flat = np.array([img.flatten() for img in X])  # Chuyển đổi ảnh thành vector phẳng để huấn luyện mô hình
+X_train, X_test, y_train, y_test, X_images_train, X_images_test = train_test_split(X_flat, y, X, test_size=0.2, random_state=42)
+
+# Huấn luyện và đánh giá các mô hình
+def evaluate_model(model, X_train, X_test, y_train, y_test):
+    start_time = time.time()
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    duration = time.time() - start_time
+    accuracy = accuracy_score(y_test, y_pred)
+    precision = precision_score(y_test, y_pred, average='macro', zero_division=1)
+    recall = recall_score(y_test, y_pred, average='macro', zero_division=1)
+    return duration, accuracy, precision, recall, y_pred
+
+# Sử dụng mô hình KNN cho ví dụ này (bạn có thể thay bằng SVM hoặc Decision Tree)
+knn = KNeighborsClassifier(n_neighbors=3)
+knn_time, knn_acc, knn_precision, knn_recall, knn_y_pred = evaluate_model(knn, X_train, X_test, y_train, y_test)
+
+# In kết quả
+print("KNN - Time:", knn_time, "Accuracy:", knn_acc, "Precision:", knn_precision, "Recall:", knn_recall)
+
+# Hiển thị hình ảnh kiểm tra với nhãn dự đoán
+def show_images_with_predictions(images, true_labels, predicted_labels, num_images=10):
+    plt.figure(figsize=(15, 5))
+    for i in range(num_images):
+        plt.subplot(2, 5, i + 1)
+        plt.imshow(images[i], cmap='gray')
+        plt.title(f"True: {true_labels[i]}\nPred: {predicted_labels[i]}")
+        plt.axis('off')
+    plt.show()
+
+# Hiển thị kết quả dự đoán trên 10 ảnh từ tập kiểm tra
+show_images_with_predictions(X_images_test, y_test, knn_y_pred, num_images=10)
